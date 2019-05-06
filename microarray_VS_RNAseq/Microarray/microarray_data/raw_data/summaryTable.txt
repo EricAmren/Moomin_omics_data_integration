@@ -1,0 +1,7 @@
+FileName	File Name	treatment	Sample Code
+microarray18LL-1.txt	microarray18LL-1	Leaf Lysate	microarray18LL-1
+microarray18LL-2.txt	microarray18LL-2	Leaf Lysate	microarray18LL-2
+microarray18LL-3.txt	microarray18LL-3	Leaf Lysate	microarray18LL-3
+microarray18MM-1.txt	microarray18MM-1	Minimal Media	microarray18MM-1
+microarray18MM-2.txt	microarray18MM-2	Minimal Media	microarray18MM-2
+microarray18MM-3.txt	microarray18MM-3	Minimal Media	microarray18MM-3

@@ -1,0 +1,13 @@
+base
+knitr
+rmdformats
+DT
+limma
+gplots
+dplyr
+lattice
+MASS
+memisc
+blockmodeling
+testthat
+EBSeq
