@@ -71,7 +71,7 @@ A very-well organized git repo can be found at : https://github.com/TheMicroGirl
 library(limma)
 library(gplots)
 library(dplyr)
-source("Microarray/scripts/bayesreg.R")
+source("Microarray/cyber-t_R_scripts/bayesreg.R")
 ```
 
 ## Reading raw data
@@ -249,7 +249,7 @@ df_EBFC <- data.frame(ECs=rownames(df_EBFC), logFC=log(df_EBFC[,1]))
 df1 <- data.frame(EBDERes$PPMat)
 df1$names <- rownames(EBDERes$PPMat)
 final_EBseq_results <- merge(df1, df_EBFC, by.x="names", by.y="ECs")
-write.table(final_EBseq_results, file="RNAseq/EBseq/final_EBseq_results.tsv", sep="\t", row.names = FALSE, quote = FALSE)
+write.table(final_EBseq_results, file="RNAseq/EBseq_results/final_EBseq_results.tsv", sep="\t", row.names = FALSE, quote = FALSE)
 ```
 
 # Merging RNAseq and Microarray data
