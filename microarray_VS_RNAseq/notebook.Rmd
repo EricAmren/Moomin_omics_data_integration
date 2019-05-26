@@ -341,10 +341,10 @@ plot(summary$limma_logFC, summary$EdgeR_logFC,
      ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_limma_vs_FC <- cor.test(~ as.numeric(summary$limma_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_limma_vs_FC <- summary(lm(summary$limma_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
-rho_limma_vs_FC2 <- cor.test(~ as.numeric(only_significant_values$limma_logFC) + as.numeric(only_significant_values$EdgeR_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
-r_squared_limma_vs_FC2 <- summary(lm(only_significant_values$limma_logFC ~ only_significant_values$EdgeR_logFC, data=only_significant_values))$adj.r.squared
+rho_limma_vs_EdgeR <- cor.test(~ as.numeric(summary$limma_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_limma_vs_EdgeR <- summary(lm(summary$limma_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
+rho_limma_vs_EdgeR2 <- cor.test(~ as.numeric(only_significant_values$limma_logFC) + as.numeric(only_significant_values$EdgeR_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
+r_squared_limma_vs_EdgeR2 <- summary(lm(only_significant_values$limma_logFC ~ only_significant_values$EdgeR_logFC, data=only_significant_values))$adj.r.squared
 
 ```
 
@@ -361,8 +361,8 @@ plot(summary$EB_logFC, summary$EdgeR_logFC,
      ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_EB_vs_FC <- cor.test(~ as.numeric(summary$EB_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_EB_vs_FC <- summary(lm(summary$EB_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
+rho_EB_vs_EdgeR <- cor.test(~ as.numeric(summary$EB_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_EB_vs_EdgeR <- summary(lm(summary$EB_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
 ```
 
 ## Cyber-t Vs Limma
@@ -393,8 +393,8 @@ r_squared_cyber_t_vs_EB2 <- summary(lm(only_significant_values$cyber_t_logFC ~ o
 
 ## Table of results
 ```{r echo = FALSE, results = 'asis'}
-rho <- c(rho_limma_vs_FC,rho_EB_vs_FC,rho_cyber_t_vs_limma,rho_cyber_t_vs_EB,rho_limma_vs_FC2,rho_cyber_t_vs_EB2)
-r_squared <- c(r_squared_limma_vs_FC,r_squared_EB_vs_FC,r_squared_cyber_t_vs_limma,r_squared_cyber_t_vs_EB,r_squared_limma_vs_FC2,r_squared_cyber_t_vs_EB2)
+rho <- c(rho_limma_vs_EdgeR,rho_EB_vs_EdgeR,rho_cyber_t_vs_limma,rho_cyber_t_vs_EB,rho_limma_vs_EdgeR2,rho_cyber_t_vs_EB2)
+r_squared <- c(r_squared_limma_vs_EdgeR,r_squared_EB_vs_EdgeR,r_squared_cyber_t_vs_limma,r_squared_cyber_t_vs_EB,r_squared_limma_vs_EdgeR2,r_squared_cyber_t_vs_EB2)
 stat_table <- tibble(rho, r_squared)
 colnames(stat_table) <- c("Spearman : rho", "R²")
 rownames(stat_table) <- c("Limma / EdgeR","EBseq / EdgeR","Cyber-t / Limma","Cyber-T / EBseq", "limma / FC (above threshold)", "Cyber-t / EBseq (above threshold)")
