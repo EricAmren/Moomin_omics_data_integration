@@ -25,4 +25,4 @@ writeSBML(model_for_EBseq,'output/result_EBseq_model.xml')
 % Comparison
 
 concordance_matrix = cyber_t_model_stoich.outputColours==EBseq_model_stoich.outputColours;
-d = num2cell(c), cyber_t_model_stoich
+disdonctesoutoi = num2cell(concordance_matrix), cyber_t_model_stoich

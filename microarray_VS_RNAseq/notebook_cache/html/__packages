@@ -11,3 +11,4 @@ memisc
 blockmodeling
 testthat
 EBSeq
+rjson

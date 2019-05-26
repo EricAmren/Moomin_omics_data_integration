@@ -56,8 +56,8 @@ In order to add a way to handle microarray data in Moomin, we first need to chec
 - [x] Cyber-t logFC
 - [x] EBseq logFC
 - [x] statistical tests (spearman $\rho$ and R-squared)
-- [ ] Interpretations
-- [ ] Integration in Moomin
+- [x] Interpretations
+- [x] Integration in Moomin
 - [ ] Flux analysis comparison in Moomin
 
 ## The dataset
@@ -190,6 +190,7 @@ getLastColumn <- function(x){
 counts_list <- lapply(files,getLastColumn)
 
 gene_ids <- read.csv(file = "RNAseq/RNAseq_countings/trimmed_ERR2955747.tsv", header = TRUE, sep = "\t", skip=1)[,1]
+length(gene_ids)
 
 EBseq_counts_df <- data.frame(gene_ids)
 EBseq_counts_df <- cbind(EBseq_counts_df, counts_list)
@@ -270,7 +271,7 @@ cyber_t_results <- format(cyber_t_results, scientific = FALSE)
 
 ### Import EBseq results for RNAseq
 ```{r}
-EBseq_results <- read.table("RNAseq/EBseq/final_EBseq_results.tsv", header=TRUE)
+EBseq_results <- read.table("RNAseq/EBseq_results/final_EBseq_results.tsv", header=TRUE)
 small_EBseq_results <- data.frame(gsub("ECs_", "ECs", EBseq_results$names), EBseq_results$PPDE, EBseq_results$logFC)
 colnames(small_EBseq_results) <- c("gene_id", "EBseq_PPDE", "EBseq_logFC")
 
@@ -298,25 +299,25 @@ small_limma_results <- dplyr::select(limma_results, SystematicName, logFC, adj.P
 colnames(small_limma_results) <- c("gene_id", "limma_logFC", "limma_Pval")
 ```
 
-### Import FeatureCounts results for RNAseq
+### Import EdgeR results for RNAseq
 ```{r}
 rnaseq_results <- read.table("misc/SakaiRNASeq/2.RNASeq_Data_Analysis/3. DEG_analysis/RNAseqTopTable-Paired.txt", skip=1)
 colnames(rnaseq_results) <- c("ECs", "logFC", "t", "P.Value", "adj.P.Val", "b")
-FeatureCounts_corresponding_genes <- merge(rnaseq_results, references, by.x="ECs", by.y="subject")
-FeatureCounts_corresponding_genes <- data.frame(FeatureCounts_corresponding_genes$SystematicName, FeatureCounts_corresponding_genes$P.Value,FeatureCounts_corresponding_genes$logFC)
-colnames(FeatureCounts_corresponding_genes) <- c("gene_id", "featureCounts_Pval", "featureCounts_logFC")
+EdgeR_corresponding_genes <- merge(rnaseq_results, references, by.x="ECs", by.y="subject")
+EdgeR_corresponding_genes <- data.frame(EdgeR_corresponding_genes$SystematicName, EdgeR_corresponding_genes$P.Value,EdgeR_corresponding_genes$logFC)
+colnames(EdgeR_corresponding_genes) <- c("gene_id", "EdgeR_Pval", "EdgeR_logFC")
 ```
 ## Merging all results in one big df
 ```{r}
 summary <- merge(cyber_t_results, EBseq_corresponding_genes, by.x="gene_id", by.y="SystematicName")
-summary <- merge(summary, FeatureCounts_corresponding_genes, by="gene_id") 
+summary <- merge(summary, EdgeR_corresponding_genes, by="gene_id") 
 summary <- merge(summary, small_limma_results, by="gene_id")
-summary <- summary[c("gene_id", "cyber_t_logFC", "EB_logFC", "limma_logFC", "featureCounts_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "featureCounts_Pval")]
+summary <- summary[c("gene_id", "cyber_t_logFC", "EB_logFC", "limma_logFC", "EdgeR_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "EdgeR_Pval")]
 ```
 ## Filtering out unsignificant values
 ```{r}
 dim(summary)
-only_significant_values<-summary[(summary$cyber_t_PPDE > 0.95 & summary$EBseq_PPDE > 0.95 & summary$limma_Pval < 0.05 & summary$featureCounts_Pval < 0.05),]
+only_significant_values<-summary[(summary$cyber_t_PPDE > 0.95 & summary$EBseq_PPDE > 0.95 & summary$limma_Pval < 0.05 & summary$EdgeR_Pval < 0.05),]
 dim(only_significant_values)
 only_significant_values[complete.cases(only_significant_values), ]
 only_significant_values <- na.omit(only_significant_values)
@@ -332,31 +333,31 @@ dim(summary)
 
 # Results comparison
 
-## Limma Vs FeatureCounts
+## Limma Vs EdgeR
 ```{r}
-plot(summary$limma_logFC, summary$featureCounts_logFC, 
-     main = "Limma vs FeatureCounts logFC comparison", 
+plot(summary$limma_logFC, summary$EdgeR_logFC, 
+     main = "Limma vs EdgeR logFC comparison", 
      xlab = "Limma logFC",
-     ylab = "FeatureCounts logFC",
+     ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_limma_vs_FC <- cor.test(~ as.numeric(summary$limma_logFC) + as.numeric(summary$featureCounts_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_limma_vs_FC <- summary(lm(summary$limma_logFC ~ summary$featureCounts_logFC, data=summary))$adj.r.squared
-rho_limma_vs_FC2 <- cor.test(~ as.numeric(only_significant_values$limma_logFC) + as.numeric(only_significant_values$featureCounts_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
-r_squared_limma_vs_FC2 <- summary(lm(only_significant_values$limma_logFC ~ only_significant_values$featureCounts_logFC, data=only_significant_values))$adj.r.squared
+rho_limma_vs_FC <- cor.test(~ as.numeric(summary$limma_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_limma_vs_FC <- summary(lm(summary$limma_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
+rho_limma_vs_FC2 <- cor.test(~ as.numeric(only_significant_values$limma_logFC) + as.numeric(only_significant_values$EdgeR_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
+r_squared_limma_vs_FC2 <- summary(lm(only_significant_values$limma_logFC ~ only_significant_values$EdgeR_logFC, data=only_significant_values))$adj.r.squared
 
 ```
 
-## EBseq Vs FeatureCounts
+## EBseq Vs EdgeR
 ```{r}
-plot(summary$EB_logFC, summary$featureCounts_logFC, 
-     main = "EBseq vs FeatureCounts logFC comparison", 
+plot(summary$EB_logFC, summary$EdgeR_logFC, 
+     main = "EBseq vs EdgeR logFC comparison", 
      xlab = "EBseq logFC",
-     ylab = "FeatureCounts logFC",
+     ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_EB_vs_FC <- cor.test(~ as.numeric(summary$EB_logFC) + as.numeric(summary$featureCounts_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_EB_vs_FC <- summary(lm(summary$EB_logFC ~ summary$featureCounts_logFC, data=summary))$adj.r.squared
+rho_EB_vs_FC <- cor.test(~ as.numeric(summary$EB_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_EB_vs_FC <- summary(lm(summary$EB_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
 ```
 
 ## Cyber-t Vs Limma
@@ -391,7 +392,7 @@ rho <- c(rho_limma_vs_FC,rho_EB_vs_FC,rho_cyber_t_vs_limma,rho_cyber_t_vs_EB,rho
 r_squared <- c(r_squared_limma_vs_FC,r_squared_EB_vs_FC,r_squared_cyber_t_vs_limma,r_squared_cyber_t_vs_EB,r_squared_limma_vs_FC2,r_squared_cyber_t_vs_EB2)
 stat_table <- tibble(rho, r_squared)
 colnames(stat_table) <- c("Spearman : rho", "R²")
-rownames(stat_table) <- c("Limma / FeatureCounts","EBseq / FeatureCounts","Cyber-t / Limma","Cyber-T / EBseq", "limma / FC (above threshold)", "Cyber-t / EBseq (above threshold)")
+rownames(stat_table) <- c("Limma / EdgeR","EBseq / EdgeR","Cyber-t / Limma","Cyber-T / EBseq", "limma / FC (above threshold)", "Cyber-t / EBseq (above threshold)")
 kable(stat_table)
 ```
 
@@ -402,7 +403,7 @@ kable(stat_table)
 with(summary, plot(cyber_t_logFC, cyber_t_PPDE, pch=20, main="Cyber-t", xlim=c(-2,2)))
 with(summary, plot(limma_logFC, limma_Pval, pch=20, main="Limma",  xlim=c(-2,2)))
 with(summary, plot(EB_logFC, EBseq_PPDE, pch=20, main="EBseq",  xlim=c(-2,2)))
-with(summary, plot(featureCounts_logFC, featureCounts_Pval, pch=20, main="FeatureCounts",  xlim=c(-2,2)))
+with(summary, plot(EdgeR_logFC, EdgeR_Pval, pch=20, main="EdgeR",  xlim=c(-2,2)))
 ```
 
 # Format and export data for Moomin input
@@ -415,5 +416,32 @@ write.table(EB_exp_mat_for_moomin, file = "Moomin_input/EBseq_res.tsv", quote=F,
 cyber_t_exp_mat <- data.frame(only_significant_values$gene_id, only_significant_values$cyber_t_PPDE, only_significant_values$cyber_t_logFC)
 colnames(cyber_t_exp_mat) <- c("GeneID", "PPDE", "FC")
 write.table(cyber_t_exp_mat, file = "Moomin_input/cyber_t_res.tsv", quote=F, sep="\t", row.names = F)
+```
+
+# Compare Moomin results from EBSeq or Cyber-T 
+```{r}
+library("rjson")
+RNASeq_moomin_output <- t(as.data.frame(fromJSON(file = "../Cyber-t_integration_to_Moomin/output/EBseq_output_stoich.json")))
+RNA_output <- cbind.data.frame(rownames(RNASeq_moomin_output), RNASeq_moomin_output)
+
+microarray_moomin_output <- t(as.data.frame(fromJSON(file = "../Cyber-t_integration_to_Moomin/output/cyber_t_output_stoich.json")))
+microarray_output <- cbind.data.frame(rownames(microarray_moomin_output), microarray_moomin_output)
+
+merged_df <- merge(RNASeq_moomin_output, microarray_moomin_output, by="row.names", all.x=TRUE)
+colnames(merged_df) <- c("reaction_ID", "RNA_color", "microarray_color")
+
+# Number of reaction with same color ?
+length(which(merged_df$RNA_color == merged_df$microarray_color))
+no_good <- merged_df[merged_df$RNA_color != merged_df$microarray_color,]
+erf <- no_good[no_good$microarray_color == 0,]
+dim(no_good)
+dim(erf)
+rho_dabb <- cor.test(~ as.numeric(merged_df$RNA_color) + as.numeric(merged_df$microarray_color), data=merged_df, method = "spearman", continuity = TRUE)$estimate
+rho_dabb
+
+plot(merged_df$RNA_color, merged_df$microarray_color, 
+     main = "Limma vs EdgeR logFC comparison", 
+     xlab = "Limma logFC",
+     ylab = "EdgeR logFC")
 ```
 
