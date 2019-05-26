@@ -335,8 +335,8 @@ dim(summary)
 
 ## Limma Vs EdgeR
 ```{r}
-plot(summary$limma_logFC, summary$EdgeR_logFC, 
-     main = "Limma vs EdgeR logFC comparison", 
+plot(summary$limma_logFC, summary$EdgeR_logFC,
+     main = "Limma vs EdgeR logFC comparison",
      xlab = "Limma logFC",
      ylab = "EdgeR logFC",
      xlim = c(-6,6),
@@ -350,6 +350,11 @@ r_squared_limma_vs_FC2 <- summary(lm(only_significant_values$limma_logFC ~ only_
 
 ## EBseq Vs EdgeR
 ```{r}
+
+length(summary$EdgeR_logFC)
+length(summary$EB_logFC)
+length(as.numeric(summary$EB_logFC))
+length(as.numeric(summary$EdgeR_logFC))
 plot(summary$EB_logFC, summary$EdgeR_logFC, 
      main = "EBseq vs EdgeR logFC comparison", 
      xlab = "EBseq logFC",
