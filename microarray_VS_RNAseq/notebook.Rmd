@@ -309,15 +309,15 @@ colnames(EdgeR_corresponding_genes) <- c("gene_id", "EdgeR_Pval", "EdgeR_logFC")
 ```
 ## Merging all results in one big df
 ```{r}
-summary <- merge(cyber_t_results, EBseq_corresponding_genes, by.x="gene_id", by.y="SystematicName")
-summary <- merge(summary, EdgeR_corresponding_genes, by="gene_id") 
-summary <- merge(summary, small_limma_results, by="gene_id")
-summary <- summary[c("gene_id", "cyber_t_logFC", "EB_logFC", "limma_logFC", "EdgeR_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "EdgeR_Pval")]
+res_summary <- merge(cyber_t_results, EBseq_corresponding_genes, by.x="gene_id", by.y="SystematicName")
+res_summary <- merge(res_summary, EdgeR_corresponding_genes, by="gene_id") 
+res_summary <- merge(res_summary, small_limma_results, by="gene_id")
+res_summary <- res_summary[c("gene_id", "cyber_t_logFC", "EB_logFC", "limma_logFC", "EdgeR_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "EdgeR_Pval")]
 ```
 ## Filtering out unsignificant values
 ```{r}
-dim(summary)
-only_significant_values<-summary[(summary$cyber_t_PPDE > 0.95 & summary$EBseq_PPDE > 0.95 & summary$limma_Pval < 0.05 & summary$EdgeR_Pval < 0.05),]
+dim(res_summary)
+only_significant_values<-res_summary[(res_summary$cyber_t_PPDE > 0.95 & res_summary$EBseq_PPDE > 0.95 & res_summary$limma_Pval < 0.05 & res_summary$EdgeR_Pval < 0.05),]
 dim(only_significant_values)
 only_significant_values[complete.cases(only_significant_values), ]
 only_significant_values <- na.omit(only_significant_values)
@@ -325,24 +325,30 @@ dim(only_significant_values)
 ```
 ## Filtering out missing values
 ```{r}
-dim(summary)
-summary[complete.cases(summary), ]
-summary <- na.omit(summary)
-dim(summary)
+dim(res_summary)
+filtered_res_summary <- res_summary[complete.cases(res_summary), ]
+filtered_res_summary <- na.omit(filtered_res_summary)
+dim(res_summary)
 ```
 
 # Results comparison
 
+## Overlap
+```{r}
+res_summary
+```
+
+
 ## Limma Vs EdgeR
 ```{r}
-plot(summary$limma_logFC, summary$EdgeR_logFC,
+plot(res_summary$limma_logFC, res_summary$EdgeR_logFC,
      main = "Limma vs EdgeR logFC comparison",
      xlab = "Limma logFC",
      ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_limma_vs_EdgeR <- cor.test(~ as.numeric(summary$limma_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_limma_vs_EdgeR <- summary(lm(summary$limma_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
+rho_limma_vs_EdgeR <- cor.test(~ as.numeric(res_summary$limma_logFC) + as.numeric(res_summary$EdgeR_logFC), data=res_summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_limma_vs_EdgeR <- summary(lm(res_summary$limma_logFC ~ res_summary$EdgeR_logFC, data=res_summary))$adj.r.squared
 rho_limma_vs_EdgeR2 <- cor.test(~ as.numeric(only_significant_values$limma_logFC) + as.numeric(only_significant_values$EdgeR_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
 r_squared_limma_vs_EdgeR2 <- summary(lm(only_significant_values$limma_logFC ~ only_significant_values$EdgeR_logFC, data=only_significant_values))$adj.r.squared
 
@@ -351,42 +357,42 @@ r_squared_limma_vs_EdgeR2 <- summary(lm(only_significant_values$limma_logFC ~ on
 ## EBseq Vs EdgeR
 ```{r}
 
-length(summary$EdgeR_logFC)
-length(summary$EB_logFC)
-length(as.numeric(summary$EB_logFC))
-length(as.numeric(summary$EdgeR_logFC))
-plot(summary$EB_logFC, summary$EdgeR_logFC, 
+length(res_summary$EdgeR_logFC)
+length(res_summary$EB_logFC)
+length(as.numeric(res_summary$EB_logFC))
+length(as.numeric(res_summary$EdgeR_logFC))
+plot(res_summary$EB_logFC, res_summary$EdgeR_logFC, 
      main = "EBseq vs EdgeR logFC comparison", 
      xlab = "EBseq logFC",
      ylab = "EdgeR logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_EB_vs_EdgeR <- cor.test(~ as.numeric(summary$EB_logFC) + as.numeric(summary$EdgeR_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_EB_vs_EdgeR <- summary(lm(summary$EB_logFC ~ summary$EdgeR_logFC, data=summary))$adj.r.squared
+rho_EB_vs_EdgeR <- cor.test(~ as.numeric(res_summary$EB_logFC) + as.numeric(res_summary$EdgeR_logFC), data=res_summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_EB_vs_EdgeR <- summary(lm(res_summary$EB_logFC ~ res_summary$EdgeR_logFC, data=res_summary))$adj.r.squared
 ```
 
 ## Cyber-t Vs Limma
 ```{r}
-plot(summary$cyber_t_logFC, summary$limma_logFC, 
+plot(res_summary$cyber_t_logFC, res_summary$limma_logFC, 
      main = "Cyber-t vs limma logFC comparison", 
      xlab = "Cyber-t logFC",
      ylab = "limma logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_cyber_t_vs_limma <- cor.test(~ as.numeric(summary$cyber_t_logFC) + as.numeric(summary$limma_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_cyber_t_vs_limma <- summary(lm(summary$cyber_t_logFC ~ summary$limma_logFC, data=summary))$adj.r.squared
+rho_cyber_t_vs_limma <- cor.test(~ as.numeric(res_summary$cyber_t_logFC) + as.numeric(res_summary$limma_logFC), data=res_summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_cyber_t_vs_limma <- summary(lm(res_summary$cyber_t_logFC ~ res_summary$limma_logFC, data=res_summary))$adj.r.squared
 ```
 
 ## Cyber-t Vs EBseq
 ```{r}
-plot(summary$cyber_t_logFC, summary$EB_logFC, 
+plot(res_summary$cyber_t_logFC, res_summary$EB_logFC, 
      main = "Cyber-t vs EBseq logFC comparison", 
      xlab = "Cyber-t logFC",
      ylab = "EBseq logFC",
      xlim = c(-6,6),
      ylim = c(-6,6))
-rho_cyber_t_vs_EB <- cor.test(~ as.numeric(summary$cyber_t_logFC) + as.numeric(summary$EB_logFC), data=summary, method = "spearman", continuity = TRUE)$estimate
-r_squared_cyber_t_vs_EB <- summary(lm(summary$cyber_t_logFC ~ summary$EB_logFC, data=summary))$adj.r.squared
+rho_cyber_t_vs_EB <- cor.test(~ as.numeric(res_summary$cyber_t_logFC) + as.numeric(res_summary$EB_logFC), data=res_summary, method = "spearman", continuity = TRUE)$estimate
+r_squared_cyber_t_vs_EB <- summary(lm(res_summary$cyber_t_logFC ~ res_summary$EB_logFC, data=res_summary))$adj.r.squared
 rho_cyber_t_vs_EB2 <- cor.test(~ as.numeric(only_significant_values$cyber_t_logFC) + as.numeric(only_significant_values$EB_logFC), data=only_significant_values, method = "spearman", continuity = TRUE)$estimate
 r_squared_cyber_t_vs_EB2 <- summary(lm(only_significant_values$cyber_t_logFC ~ only_significant_values$EB_logFC, data=only_significant_values))$adj.r.squared
 ```
@@ -394,10 +400,10 @@ r_squared_cyber_t_vs_EB2 <- summary(lm(only_significant_values$cyber_t_logFC ~ o
 ## Table of results
 ```{r echo = FALSE, results = 'asis'}
 rho <- c(rho_limma_vs_EdgeR,rho_EB_vs_EdgeR,rho_cyber_t_vs_limma,rho_cyber_t_vs_EB,rho_limma_vs_EdgeR2,rho_cyber_t_vs_EB2)
-r_squared <- c(r_squared_limma_vs_EdgeR,r_squared_EB_vs_EdgeR,r_squared_cyber_t_vs_limma,r_squared_cyber_t_vs_EB,r_squared_limma_vs_EdgeR2,r_squared_cyber_t_vs_EB2)
+r_squared <- c(r_squared_limma_vs_EdgeR,r_squared_EB_vs_EdgeR,r_squared_cyber_t_vs_limma,r_squared_cyber_t_vs_EB,r_squared_limma_vs_EdgeR2,r_squared_cyber_t_vs_EB2,)
 stat_table <- tibble(rho, r_squared)
 colnames(stat_table) <- c("Spearman : rho", "R²")
-rownames(stat_table) <- c("Limma / EdgeR","EBseq / EdgeR","Cyber-t / Limma","Cyber-T / EBseq", "limma / FC (above threshold)", "Cyber-t / EBseq (above threshold)")
+rownames(stat_table) <- c("Limma / EdgeR","EBseq / EdgeR","Cyber-t / Limma","Cyber-T / EBseq", "limma / EdgeR (above threshold)", "Cyber-t / EBseq (above threshold)")
 kable(stat_table)
 ```
 
@@ -405,10 +411,10 @@ kable(stat_table)
 
 ## Volcano plots
 ```{r, echo=TRUE}
-with(summary, plot(cyber_t_logFC, cyber_t_PPDE, pch=20, main="Cyber-t", xlim=c(-2,2)))
-with(summary, plot(limma_logFC, limma_Pval, pch=20, main="Limma",  xlim=c(-2,2)))
-with(summary, plot(EB_logFC, EBseq_PPDE, pch=20, main="EBseq",  xlim=c(-2,2)))
-with(summary, plot(EdgeR_logFC, EdgeR_Pval, pch=20, main="EdgeR",  xlim=c(-2,2)))
+with(res_summary, plot(cyber_t_logFC, cyber_t_PPDE, pch=20, main="Cyber-t", xlim=c(-2,2)))
+with(res_summary, plot(limma_logFC, limma_Pval, pch=20, main="Limma",  xlim=c(-2,2)))
+with(res_summary, plot(EB_logFC, EBseq_PPDE, pch=20, main="EBseq",  xlim=c(-2,2)))
+with(res_summary, plot(EdgeR_logFC, EdgeR_Pval, pch=20, main="EdgeR",  xlim=c(-2,2)))
 ```
 
 # Format and export data for Moomin input
@@ -441,6 +447,9 @@ no_good <- merged_df[merged_df$RNA_color != merged_df$microarray_color,]
 erf <- no_good[no_good$microarray_color == 0,]
 dim(no_good)
 dim(erf)
+
+arf <- no_good[no_good$RNA_color == 0,]
+dim(arf)
 rho_dabb <- cor.test(~ as.numeric(merged_df$RNA_color) + as.numeric(merged_df$microarray_color), data=merged_df, method = "spearman", continuity = TRUE)$estimate
 rho_dabb
 
