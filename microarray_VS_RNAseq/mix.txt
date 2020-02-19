@@ -166,3 +166,9 @@ Lambda0 = 0.56135
 Lambda1 = 0.43865 
 r       = 0.30335 
 s       = 12.4123 
+PPDE mixture model parameters
+-----------------------------
+Lambda0 = 0.56135 
+Lambda1 = 0.43865 
+r       = 0.30335 
+s       = 12.4123 

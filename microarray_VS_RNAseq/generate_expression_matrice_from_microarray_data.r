@@ -16,7 +16,7 @@ source("cyber-t_R_scripts/bayesreg.R")
 
 # Limma functions are used here to extract relevant field.
 setwd("microarray_data/raw_data/")
-summaryTable<-read.delim("summaryTable.txt",check.names=FALSE,stringsAsFactors=FALSE)
+summaryTable<-read.delim("summaryTable.txt",check.names=FALSE,stringsAsFactors=FALSE) # Read data of files listed in the summaryTable.txt
 microarrayData <-read.maimages(summaryTable[,"FileName"],source="agilent",green.only=TRUE)
 
 ## Probes filtering : keeping only probes that are 10% brighter than negative probes.
@@ -69,47 +69,16 @@ cyber_t_output3 <- aggregate(cyber_t_output3[,2:3], list(cyber_t_output3$subject
 colnames(cyber_t_output3) <- c("subject", "PPDE", "logFC")
 write.table(cyber_t_output3, file="Microarray/results/cyber_t_final_results.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
-# Differential expression analysis with RNAseq data and EBseq
-library(memisc)
-
 ## Import Cyber-t results for microarray
 
 cyber_t_results <- read.table("Microarray/results/cyber_t_final_results.txt")
-colnames(cyber_t_results) <- c("gene_id", "cyber_t_PPDE", "cyber_t_logFC")
-head(cyber_t_results)
+colnames(cyber_t_results) <- c("GeneID", "PPDE", "FC")
 cyber_t_results <- format(cyber_t_results, scientific = FALSE)
 
-## Repair name discrepancies between RNAseq data and microarray data
-references <- read.table("Comparison/reference_table.txt")
-EBseq_corresponding_genes <- merge(small_EBseq_results, references, by.x="gene_id", by.y="subject")
-colnames(EBseq_corresponding_genes) <- c("ECs","EBseq_PPDE","EBseq_logFC","query.name", "SystematicName")
-
-## Merging all results in one big df
-res_summary <- merge(cyber_t_results, small_EBseq_results, by="gene_id")
-res_summary <- merge(res_summary, EdgeR_corresponding_genes, by="gene_id") 
-res_summary <- merge(res_summary, small_limma_results, by="gene_id")
-res_summary <- res_summary[c("gene_id", "cyber_t_logFC", "EBseq_logFC", "limma_logFC", "EdgeR_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "EdgeR_Pval")]
-
+## Filtering out genes with ppde below a threshold of 97%
 bayes_threshold = 0.97
-freq_threshold = 0.01
-
-full_res_summary <- merge(cyber_t_results, small_EBseq_results, by="gene_id", all=TRUE)
-full_res_summary <- merge(full_res_summary, EdgeR_corresponding_genes, by="gene_id", all=TRUE) 
-full_res_summary <- merge(full_res_summary, small_limma_results, by="gene_id", all=TRUE)
-full_res_summary <- full_res_summary[c("gene_id", "cyber_t_logFC", "EBseq_logFC", "limma_logFC", "EdgeR_logFC", "cyber_t_PPDE", "EBseq_PPDE", "limma_Pval", "EdgeR_Pval")]
-
-full_only_significant_values<-full_res_summary[(full_res_summary$cyber_t_PPDE > bayes_threshold | full_res_summary$EBseq_PPDE > bayes_threshold | full_res_summary$limma_Pval < freq_threshold | full_res_summary$EdgeR_Pval < freq_threshold),]
-full_only_significant_values <- full_only_significant_values[!(rowSums(is.na(full_only_significant_values))==NCOL(full_only_significant_values)),]
-
-## Filtering out unsignificant values
-only_significant_values<-res_summary[(res_summary$cyber_t_PPDE > bayes_threshold & res_summary$EBseq_PPDE > bayes_threshold & res_summary$limma_Pval < freq_threshold & res_summary$EdgeR_Pval < freq_threshold),]
-
-
-
+filtered_cyber_t_results <- cyber_t_results[(cyber_t_results$PPDE > bayes_threshold),]
 
 # Format and export data for Moomin input
 
-cyber_t_exp_mat <- data.frame(only_significant_values$gene_id, only_significant_values$cyber_t_PPDE, only_significant_values$cyber_t_logFC)
-colnames(cyber_t_exp_mat) <- c("GeneID", "PPDE", "FC")
-write.table(cyber_t_exp_mat, file = "Moomin_input/cyber_t_res.tsv", quote=F, sep="\t", row.names = F)
-
+write.table(filtered_cyber_t_results, file = "Moomin_input/cyber_t_res2.tsv", quote=F, sep="\t", row.names = F)
